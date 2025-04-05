@@ -1,0 +1,7 @@
+body {
+  font-family: system-ui, sans-serif;  /* Use the sans-serif font from the system */
+  line-height: 1.5;  /* Line spacing */
+  max-width: 800px;  /* Limits the text width to ~80 characters per line */
+  margin: 0 auto;    /* Centers the content horizontally */
+  padding: 20px;     /* Adds a padding to prevent the text to be glued to the edges of the screen */
+}
