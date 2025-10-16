@@ -1,7 +1,53 @@
 body {
-  font-family: system-ui, sans-serif;  /* Use the sans-serif font from the system */
-  line-height: 1.5;  /* Line spacing */
-  max-width: 800px;  /* Limits the text width to ~80 characters per line */
-  margin: 0 auto;    /* Centers the content horizontally */
-  padding: 20px;     /* Adds a padding to prevent the text to be glued to the edges of the screen */
+  font-family: Verdana, Geneva, sans-serif;
+  background-color: #fdfdfd;
+  color: #111;
+  margin: 20px;
+  line-height: 1.5;
 }
+
+h1, h2, h3 {
+  color: #222;
+  font-weight: normal;
+}
+
+a {
+  color: #0066cc;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid #ccc;
+  margin: 1em 0;
+}
+
+ul {
+  padding-left: 1.2em;
+}
+
+footer {
+  font-size: 0.9em;
+  color: #555;
+  margin-top: 2em;
+  border-top: 1px solid #ccc;
+  padding-top: 0.5em;
+}
+
+section {
+  margin-bottom: 1.5em;
+  padding: 0.5em;
+  border-left: 4px solid #ccc;
+  background-color: #fafafa;
+}
+
+code, pre {
+  font-family: monospace;
+  background-color: #eee;
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+}
+
