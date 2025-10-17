@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>1D Steady-State Thermal Simulation</title>
+  <title>1D Poisson</title>
   <link rel="stylesheet" href="../style.css">
 
   <!-- MathJax setup -->
@@ -21,53 +21,168 @@
   <main>
     <h1>1D Poisson Solver with Variable Permitivity</h1>
     <p>The Poisson's equation with variable \( \varepsilon \) is</p>
-    
-    <p>
-    $$ \nabla \cdot (\varepsilon \nabla \phi) = - \rho, \tag{1} $$
-    </p>
-    
+
+    <p>$$ \nabla \cdot (\varepsilon \nabla \phi) = - \rho, \tag{1} $$</p>
+  
     <p>In 1D, this reduces to:</p>
-    
+
     <p>
     $$ \frac{d}{d x}\cdot\left(\varepsilon\frac{d\phi}{dx}\right) = - \rho, \tag{2} $$
     </p>
     
-    <p>Which can be approximated by a control-volume discretization:</p>
+    <p></p>
+
+    <details>
+      <summary>Show detailed derivation from Eq. 2 to Eq. 3</summary>
+      <p>Let the domain be discretized with points \(x_1, x_2, \dots, x_N\), with \(\Delta x_i = x_{i+1} - x_i\) and \(\Delta x_i^{CV} = ( \Delta x_{i-1} + \Delta x_i ) / 2\) for control volumes.</p>
+
+      <p>From Eq. 2 we can approximate the first-order partial derivatives by first-order finite difference approximations. Applying the finite difference method to the RHS of Eq. (4), we have</p>
+
+      $$
+      \frac{d}{d x}\cdot\left(\varepsilon\frac{d\phi}{dx}\right) \approx
+      \frac{
+        \varepsilon_{i+\frac{1}{2}}
+        \overbrace{\dfrac{\partial \phi}{\partial x} \Big|_{i+\frac{1}{2}}}^{I}
+        -
+        \varepsilon{i-\frac{1}{2}}
+        \overbrace{\dfrac{\partial \phi}{\partial x} \Big|_{i-\frac{1}{2}}}^{II}
+      }{
+        x_{i+\frac{1}{2}} - x_{i-\frac{1}{2}}
+      }.
+      $$
+      
+      <p style="text-align: right;">
+      Note that \(x_{i+\frac{1}{2}} - x_{i-\frac{1}{2}} = \Delta x_i^{CV}\).
+      </p>
+      
+      <p>We can use the same technique to obtain an approximation for the terms \(I\) and \(II\):</p>
+      
+      $$
+      \frac{\partial \phi}{\partial x} \Big|_{i+\frac{1}{2}} \approx
+      \frac{\phi_{i+1/2} - \phi_{i-1/2}}{x_{i+1/2} - x_{i-1/2}} \Big|_{i+\frac{1}{2}}
+      =
+      \frac{\phi_{(i+1/2)+1/2} - \phi_{(i+1/2)-1/2}}{x_{(i+1/2)+1/2} - x_{(i+1/2)-1/2}}
+      =
+      \frac{\phi_{i+1} - \phi_i}{x_{i+1} - x_i}
+      =
+      \frac{\phi_{i+1} - \phi_i}{\Delta x_i}.
+      $$
+      
+      <p>Note that \(\partial T / \partial x\) was evaluated twice above because \(T\) is derived two times in the full equation.</p>
+      
+      $$
+      \frac{\partial \phi}{\partial x} \Big|_{i-\frac{1}{2}} \approx
+      \frac{\phi_i - \phi_{i-1}}{\Delta x_{i-1}}.
+      $$
+      
+      <p>Substituting the final form of Eqs. (6) and (7) into Eq. (5), we have</p>
+      
+      $$
+      \nabla \cdot (\varepsilon \nabla \phi) \approx
+      \dfrac{
+        \varepsilon_{i+\frac{1}{2}} \dfrac{\phi_{i+1} - \phi_i}{\Delta x_i}
+        -
+        \varepsilon_{i-\frac{1}{2}} \dfrac{\phi_i - \phi_{i-1}}{\Delta x_{i-1}}
+      }{
+        \Delta x_i^{CV}
+      }.
+      $$
+      
+      <p>Expanding \(\varepsilon\) of Eq. (8) brings us to the standard finite-volume discretization for non-uniform grids:</p>
+      
+      $$
+      \nabla \cdot (\varepsilon \nabla \phi) \approx 
+      \dfrac{
+        \dfrac{\varepsilon_{i+1}+\varepsilon_i}{2} \cdot
+        \dfrac{\phi_{i+1} - \phi_i}{\Delta x_i}  
+        -
+        \dfrac{\varepsilon_i+\varepsilon_{i-1}}{2} \cdot
+        \dfrac{\phi_i - \phi_{i-1}}{\Delta x_{i-1}}
+      }{\Delta x_i^{CV}}
+      $$
+      
+      <p>To rewrite the equation above as a matrix-ready expression, let us call:</p>
+      
+      $$
+      A = \frac{\varepsilon_{i+1} + \varepsilon_i}{2\Delta x_i}
+      $$
+      
+      $$
+      B = \frac{\varepsilon_i + \varepsilon_{i-1}}{2\Delta x_{i-1}}
+      $$
+      
+      <p>Then substituting Eqs. (10) and (11) into Eq. (9), we get</p>
+      
+      $$
+      \frac{A(\phi_{i+1} - \phi_i) - B(\phi_i - \phi_{i-1})}{\Delta x_i^{CV}} = 0.
+      $$
+      
+      <p>Multiply both sides by \(\Delta x_i^{CV}\):</p>
+      
+      $$
+      A(\phi_{i+1} - \phi_i) - B(\phi_i - \phi_{i-1}) = 0.
+      $$
+      
+      <p>Distributing the terms:</p>
+      
+      $$
+      A \phi_{i+1} + (-A - B) \phi_i + B \phi_{i-1} = 0.
+      $$
+      
+      <p>Now we can create the final coefficients as</p>
+      
+      $$
+      a_i = B, \quad b_i = -A - B, \quad c_i = A.
+      $$
+      
+      $$
+      a_i = \frac{\varepsilon_i + \varepsilon_{i-1}}{2\Delta x_{i-1}}, \quad
+      b_i = -(a_i + c_i), \quad
+      c_i = \frac{\varepsilon_{i+1} + \varepsilon_i}{2\Delta x_i}.
+      $$
+      
+      <p>And at last, arrive at the general form</p>
+      
+      $$
+      a_i \phi_{i-1} + b_i \phi_i + c_i \phi_{i+1} = 0.
+      $$
+      
+      <p>This gives a tridiagonal linear system of the form \(A \vec{\phi} = \vec{b}\), where \(A\) is a tridiagonal matrix with entries \(a_i, b_i, c_i\) and \(\vec{b}\) is the boundary condition vector.</p>
+
+      <p>Which can be approximated by a control-volume discretization:</p>
+
+      <p>
+      $$
+      \frac{
+        \varepsilon_{i+1/2} \frac{ \phi_{i+1} - \phi_i }{ \Delta x_i }
+        -
+        \varepsilon_{i-1/2} \frac{ \phi_i - \phi_{i-1} }{ \Delta x_{i-1} }
+      }{
+        \Delta x_i^{CV}
+      }
+      $$
+      </p>
+      
+      <p>Where:</p>
+      <ul>
+      <li>$$\Delta x_i = x_{i+1} - x_i$$</li>
+      <li>$$\Delta x_{i-1} = x_i - x_{i-1}$$</li>
+      <li>$$\Delta x_i^{CV} = \frac{\Delta x_{i-1} + \Delta x_i}{2}$$</li>
+      <li>$$\varepsilon_{i+1/2} = \frac{\varepsilon_{i+1} + \varepsilon_i }{2}$$</li>
+      <li>$$\varepsilon_{i-1/2} = \frac{\varepsilon_i + \varepsilon_{i-1} }{2}$$</li>
+      </ul>
+    </details>
     
-    <p>
-    $$
-    \frac{
-      \varepsilon_{i+1/2} \frac{ \phi_{i+1} - \phi_i }{ \Delta x_i }
-      -
-      \varepsilon_{i-1/2} \frac{ \phi_i - \phi_{i-1} }{ \Delta x_{i-1} }
-    }{
-      \Delta x_i^{CV}
-    }
-    \tag{3}
-    $$
-    </p>
+    <p>The 1D Poisson's equation can be discretized and written in the following tridiagonal form:</p>
+    
+    <p>$$a_i\phi_{i-1} + b_i\phi_i + c_i\phi_{i+1} = f_i \tag{3}$$</p>
     
     <p>Where:</p>
-    <ul>
-    <li>$$\Delta x_i = x_{i+1} - x_i$$</li>
-    <li>$$\Delta x_{i-1} = x_i - x_{i-1}$$</li>
-    <li>$$\Delta x_i^{CV} = \frac{\Delta x_{i-1} + \Delta x_i}{2}$$</li>
-    <li>$$\varepsilon_{i+1/2} = \frac{\varepsilon_{i+1} + \varepsilon_i }{2}$$</li>
-    <li>$$\varepsilon_{i-1/2} = \frac{\varepsilon_i + \varepsilon_{i-1} }{2}$$</li>
-    </ul>
-    
-    <p>Thus we can rewrite Eq. 3 in tridiagonal form:</p>
-    
-    <p>
-    $$a_i\phi_{i-1} + b_i\phi_i + c_i\phi_{i+1} = f_i$$
-    </p>
-    
-    <p>Where:</p>
     <p>
     $$
-    a_i = \frac{\varepsilon_i + \varepsilon_{i-1}}{2\Delta x_{i-1}}, \quad
+    a_i = \frac{\varepsilon_{i-1} + \varepsilon_i}{2\Delta x_{i-1}}, \quad
     b_i = -(a_i + c_i), \quad
-    c_i = \frac{\varepsilon_{i+1} + \varepsilon_i}{2\Delta x_i}, \quad
+    c_i = \frac{\varepsilon_i + \varepsilon_{i+1}}{2\Delta x_i}, \quad
     f_i = -\rho_i.
     $$
     </p>
@@ -118,6 +233,20 @@
     <li>\(\mathbf \phi = (n-2) \times 1\) is the column vector of unknown potentials at internal nodes</li>
     <li>\(\mathbf F = (n-2) \times 1\) is the RHS column vector, including the charge density and contributions from boundary conditions, \(F_i = -\rho_i - \text{BC contribution}\).</li>
     </ul>
+
+
+    <h2>Implementation</h2>
+    <p>To solve Poisson's equation in code we can simply use any linear solver algorithm that solves $\phi$ for $A\phi=F$. Steps:</p>
+    <ol>
+      <li>Define the grid \(x\) of length \(L\) with \(N\) points.</li>
+      <li>Compute \(\Delta x_i = x_{i+1} - x_i\) for \(i=1 \dots N-1\).</li>
+      <li>Define \(\varepsilon_i\) for each of the \(N\) points.</li>
+      <li>Assemble the coefficient matrix \(A\).</li>
+      <li>Set boundary conditions \(\phi_1\) and \(\phi_N\) (Dirichlet).</li>
+      <li>Set the \(\rho\) profile.</li>
+      <li>Assemble the RHS \(\mathbf F\).</li>
+      <li>Use a linear solver to compute \(\boldsymbol{\phi} = A^{-1} F\) or an efficient tridiagonal solver.</li>
+    </ol>
 
   </main>
 
