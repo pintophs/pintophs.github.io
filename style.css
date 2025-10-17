@@ -51,3 +51,22 @@ code, pre {
   border-radius: 3px;
 }
 
+details {
+  background: #f9fafb; /* light gray background */
+  border-left: 3px solid #007acc;
+  border-radius: 8px;
+  padding: 0.8em 1em;
+  margin: 1em 0;
+}
+
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #007acc;
+}
+
+details[open] {
+  background: #f3f4f6; /* slightly darker when opened */
+  border-left-color: #005fa3;
+}
+
